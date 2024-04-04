@@ -87,3 +87,12 @@ class CRUDBase:
 
         for obj in objs:
             await session.refresh(obj)
+
+    async def get_multi_not_fully_invested(self, session: AsyncSession):
+        charity_projects = await session.execute(
+            select(self.model).filter(
+                ~self.model.fully_invested
+            ).order_by(self.model.create_date)
+        )
+        charity_projects = charity_projects.scalars().all()
+        return charity_projects

@@ -59,6 +59,14 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+Использованные технологии:
+* Фреймворк [FastApi](https://fastapi.tiangolo.com/)
+* Библиотека для работы с базой данных [SqlAlchemy](https://www.sqlalchemy.org/)
+* Библиотека для работы с миграциями [Alembic](https://alembic.sqlalchemy.org/en/latest/)
+* ASGI web server [Uvicorn](https://www.uvicorn.org/)
+
+Переменные окружения можно взять из файла .env.example
+
 **Автор:** [Алексей Данилов](https://github.com/AlexeyDanilov/)
 
 Проект доступен [по ссылке](https://github.com/AlexeyDanilov/cat_charity_fund)

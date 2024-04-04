@@ -1,64 +1,29 @@
 from datetime import datetime
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CharityProject, Donation
-
-
-async def invest_after_creating_donation(donation: Donation, session: AsyncSession):
-    charity_projects = await session.execute(
-        select(CharityProject).filter(
-            ~CharityProject.fully_invested
-        ).order_by(CharityProject.create_date)
-    )
-    charity_projects = charity_projects.scalars().all()
-
-    if not charity_projects:
+async def invest_after_creating_entity(target, sources):
+    if not sources:
         return []
 
-    free_sum = donation.full_amount - donation.invested_amount
-    for charity_project in charity_projects:
+    free_sum = target.full_amount - target.invested_amount
+    for source in sources:
         invest_sum = min(
-            free_sum, charity_project.full_amount - charity_project.invested_amount
+            free_sum, source.full_amount - source.invested_amount
         )
-        charity_project.invested_amount += invest_sum
-        charity_project.fully_invested = charity_project.invested_amount == charity_project.full_amount
-        if charity_project.fully_invested:
-            charity_project.close_date = datetime.utcnow()
+        target.invested_amount += invest_sum
+        target.fully_invested = target.invested_amount == target.full_amount
+        if target.fully_invested:
+            target.close_date = datetime.utcnow()
 
-        donation.invested_amount += invest_sum
+        source.invested_amount += invest_sum
+        source.fully_invested = source.invested_amount == source.full_amount
+        if source.fully_invested:
+            source.close_date = datetime.utcnow()
+
         free_sum -= invest_sum
 
-    if donation.full_amount <= donation.invested_amount:
-        donation.fully_invested = True
-        donation.close_date = datetime.utcnow()
+    if target.full_amount <= target.invested_amount:
+        target.fully_invested = True
+        target.close_date = datetime.utcnow()
 
-    data = [charity_project for charity_project in charity_projects]
-    data.append(donation)
-    return data
-
-
-async def invest_after_creating_project(charity_project: CharityProject, session: AsyncSession):
-    donation = await session.execute(
-        select(Donation).filter(~Donation.fully_invested).order_by(Donation.create_date)
-    )
-    donation = donation.scalars().first()
-
-    if not donation:
-        return
-
-    invest_sum = min(charity_project.full_amount - charity_project.invested_amount,
-                     donation.full_amount - donation.invested_amount)
-    charity_project.invested_amount += invest_sum
-    donation.invested_amount += invest_sum
-
-    charity_project.fully_invested = charity_project.invested_amount == charity_project.full_amount
-    if charity_project.fully_invested:
-        charity_project.close_date = datetime.utcnow()
-
-    donation.fully_invested = donation.full_amount == donation.invested_amount
-    if donation.fully_invested:
-        donation.close_date = datetime.utcnow()
-
-    return charity_project, donation
+    return [target] + sources
