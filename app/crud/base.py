@@ -36,14 +36,20 @@ class CRUDBase:
             obj_in,
             session: AsyncSession,
             user: User = None,
+            commit_flag: bool = True
     ):
         obj_in_data = obj_in.dict()
+        if not commit_flag:
+            for key, default_value in self.model.__table__.columns.items():
+                if key not in ('id', 'create_date') and key not in obj_in_data and default_value.default is not None:
+                    obj_in_data[key] = default_value.default.arg
         if user is not None:
             obj_in_data['user_id'] = user.id
         db_obj = self.model(**obj_in_data)
-        session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
+        if commit_flag:
+            session.add(db_obj)
+            await session.commit()
+            await session.refresh(db_obj)
         return db_obj
 
     async def update(

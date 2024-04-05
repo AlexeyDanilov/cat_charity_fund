@@ -22,9 +22,10 @@ async def create_new_donation(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    donation = await donation_crud.create(new_donation, session, user)
+    donation = await donation_crud.create(new_donation, session, user, False)
     charity_projects = await charity_project_crud.get_multi_not_fully_invested(session)
     updated_data = await invest_after_creating_entity(donation, charity_projects)
+    updated_data = updated_data if updated_data else [donation, *charity_projects]
     await donation_crud.commit_and_refresh(updated_data, session)
     return donation
 

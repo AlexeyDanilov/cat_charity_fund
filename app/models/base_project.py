@@ -4,6 +4,8 @@ from app.core.db import Base
 
 from sqlalchemy import Column, Integer, Boolean, DateTime, CheckConstraint
 
+from app.models.model_constants import DEFAULT_AMOUNT
+
 
 class BaseProject(Base):
 
@@ -15,7 +17,7 @@ class BaseProject(Base):
     )
 
     full_amount = Column(Integer)
-    invested_amount = Column(Integer, default=0)
+    invested_amount = Column(Integer, default=DEFAULT_AMOUNT)
     fully_invested = Column(Boolean, default=False)
     create_date = Column(DateTime, default=datetime.now)
     close_date = Column(DateTime)

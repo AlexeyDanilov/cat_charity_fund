@@ -26,9 +26,10 @@ async def create_new_charity_project(
         session: AsyncSession = Depends(get_async_session)
 ):
     await check_unique_name(new_project.name, session)
-    new_charity_project = await charity_project_crud.create(new_project, session)
+    new_charity_project = await charity_project_crud.create(new_project, session, commit_flag=False)
     donations = await donation_crud.get_multi_not_fully_invested(session)
     updated_data = await invest_after_creating_entity(new_charity_project, donations)
+    updated_data = updated_data if updated_data else [new_charity_project, *donations]
     await charity_project_crud.commit_and_refresh(updated_data, session)
     return new_charity_project
 
